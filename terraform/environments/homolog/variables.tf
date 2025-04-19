@@ -11,11 +11,13 @@ variable "db_name" {
 
 variable "db_username" {
   type = string
+  default = "environment"
 }
 
 variable "db_password" {
   type      = string
-  sensitive = true 
+  sensitive = true
+  default = "@XqNuKeQw123"
 }
 
 variable "instance_type" {

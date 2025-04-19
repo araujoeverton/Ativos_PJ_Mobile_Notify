@@ -6,7 +6,7 @@ resource "aws_security_group" "app_sg_homolog" {
     from_port   = 8080 # Porta da aplicação Spring Boot
     to_port     = 8080
     protocol    = "tcp"
-    cidr_blocks = ["SEU_IP/32", "OUTRO_IP_SE NECESSÁRIO/32"] # Restrinja o acesso
+    cidr_blocks = ["192.168.0.25/32"] # Restrinja o acesso a outro ip se necessário
   }
 
   egress {
