@@ -4,7 +4,7 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = true
 
   tags = {
-    Name        = "vpc-meuprojeto-homolog"
+    Name        = "vpc-ativos_pj-homolog"
     Environment = "homolog"
   }
 }
@@ -12,7 +12,7 @@ resource "aws_vpc" "main" {
 resource "aws_subnet" "public_a" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = "10.0.1.0/24"
-  availability_zone = "sa-east-1a" # Adapte para sua AZ
+  availability_zone = "us-east-1a" # Adapte para sua AZ
   map_public_ip_on_launch = true # Se você precisar de IPs públicos nessas subnets
 
   tags = {
