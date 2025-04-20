@@ -1,72 +1,126 @@
-module "ecs_app" {
-  source = "terraform-aws-modules/ecs/aws"
+data "aws_region" "current" {}
 
-  cluster_name = "ecs-cluster-homolog"
+resource "aws_ecs_cluster" "main" {
+  name = var.cluster_name
 
-  service_name = "ativos-notify-app-service-homolog"
-  desired_count = 2 
+  setting {
+    name = "containerInsights"
+    value = var.enable_container_insights ? "enabled" : "disabled"
+  }
 
-  task_definition_family = "minha-app-task-homolog"
-  task_definition_network_mode = "awsvpc"
-  task_definition_requires_compatibilities = ["FARGATE"]
-  task_definition_cpu = 256
-  task_definition_memory = 512
-  task_definition_container_definitions = jsonencode([
+  tags = var.tags
+}
+
+resource "aws_iam_role" "ecs_task_execution_role" {
+  name = "${var.cluster_name}-task-execution-role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Principal = {
+          Service = "ecs-tasks.amazonaws.com"
+        }
+        Effect = "Allow"
+      },
+    ]
+  })
+
+  tags = var.tags
+}
+
+resource "aws_iam_policy" "ecs_task_execution_policy" {
+  name = "${var.cluster_name}-task-execution-policy"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "ecr:GetAuthorizationToken",
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:BatchGetImage",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          # Adicione outras permissões que sua task precisa aqui
+        ],
+        Resource = "*"
+      },
+    ]
+  })
+
+  tags = var.tags
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_task_execution_policy_attachment" {
+  role = aws_iam_role.ecs_task_execution_role.name
+  policy_arn = aws_iam_policy.ecs_task_execution_policy.arn
+}
+
+resource "aws_cloudwatch_log_group" "task_log_group" {
+  name = "/ecs/${var.cluster_name}-task"
+  retention_in_days = var.log_retention_days
+
+  tags = var.tags
+}
+
+resource "aws_ecs_task_definition" "main" {
+  family = "${var.cluster_name}-task"
+  cpu = var.cpu
+  memory = var.memory
+  network_mode = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  execution_role_arn = aws_iam_role.ecs_task_execution_role.arn
+  task_role_arn = var.task_role_arn # Adicionado para a role da task, se necessário
+  container_definitions = jsonencode([
     {
-      name = "ativos-notify-container"
-      image = "SEU_REGISTRY_ECR/sua-aplicacao:latest" # Substitua pela sua imagem no ECR
-      portMappings = [
-        {
-          containerPort = 8080
-          hostPort = 8080
-        }
-      ]
-      environment = [
-        {
-          name = "SPRING_DATASOURCE_URL"
-          value = "jdbc:postgresql://${module.aurora.endpoint}:5432/${var.db_name}" # Ajuste para PostgreSQL e use a saída do seu módulo Aurora
-        },
-        {
-          name = "SPRING_DATASOURCE_USERNAME"
-          value = var.db_username
-        },
-        {
-          name = "SPRING_DATASOURCE_PASSWORD"
-          value = var.db_password
-        }
-      ]
+      name = var.container_name
+      image = var.image
+      portMappings = var.port_mappings # Tornando portMappings uma variável
       logConfiguration = {
         logDriver = "awslogs"
         options = {
-          awslogs-group = "/ecs/minha-app-logs-homolog"
-          awslogs-region = "us-east-1" # Ajuste para a sua região
+          awslogs-group = aws_cloudwatch_log_group.task_log_group.name
+          awslogs-region = data.aws_region.current.name
           awslogs-stream-prefix = "ecs"
         }
       }
+      # Adicione outras configurações de container conforme necessário (environment, etc.)
     }
   ])
 
-  # Configurações de rede para o serviço ECS
-  load_balancer = [
-    {
-      name               = "app-lb-homolog" 
-      port               = 80
-      protocol           = "HTTP"
-      target_group_arn_attribute = "arn" # Ou "name" se você estiver usando o nome
-      target_group_arn_param_name  = "target_group_arn"
-    }
-  ]
-  assign_public_ip = true 
-  
-  # Configurações de segurança
-  security_group_ids = [modules.sg.ecs_sg_id] # Substitua pelo ID do seu Security Group para o ECS
+  tags = var.tags
+}
 
-  subnet_ids = modules.vpc.private_subnets[*] # Substitua pelas suas subnets privadas
-
-  depends_on = [module.aurora] # Garante que o Aurora seja criado antes do ECS
-
-  tags = {
-    Environment = "homolog"
-    Terraform   = "true"
+resource "aws_ecs_service" "main" {
+  name = "${var.cluster_name}-service"
+  cluster = aws_ecs_cluster.main.id
+  task_definition = aws_ecs_task_definition.main.arn
+  desired_count = var.desired_count
+  launch_type = "FARGATE"
+  network_configuration {
+    subnets = var.subnet_ids
+    security_groups = var.security_group_ids
+    assign_public_ip = var.assign_public_ip
   }
+
+  # Condicionalmente cria a configuração do load balancer se target_group_arn for fornecido
+  dynamic "load_balancer" {
+    for_each = var.target_group_arn != null ? [1] : []
+    content {
+      target_group_arn = var.target_group_arn
+      container_name = var.container_name
+      container_port = element(var.port_mappings, 0).containerPort # Assumindo uma porta se LB estiver ativo
+    }
+  }
+
+  # Removida a dependência direta do aws_lb_listener.http
+  # As dependências devem ser gerenciadas no main.tf da raiz, se necessário.
+
+  deployment_controller {
+    type = "ECS" # Ou "CODE_DEPLOY" se estiver usando CodeDeploy
+  }
+
+  tags = var.tags
 }
