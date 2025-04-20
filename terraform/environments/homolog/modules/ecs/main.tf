@@ -3,7 +3,7 @@ module "ecs_app" {
 
   cluster_name = "ecs-cluster-homolog"
 
-  service_name = "minha-app-service-homolog"
+  service_name = "ativos-notify-app-service-homolog"
   desired_count = 2 
 
   task_definition_family = "minha-app-task-homolog"
@@ -13,7 +13,7 @@ module "ecs_app" {
   task_definition_memory = 512
   task_definition_container_definitions = jsonencode([
     {
-      name = "minha-app-container"
+      name = "ativos-notify-container"
       image = "SEU_REGISTRY_ECR/sua-aplicacao:latest" # Substitua pela sua imagem no ECR
       portMappings = [
         {
