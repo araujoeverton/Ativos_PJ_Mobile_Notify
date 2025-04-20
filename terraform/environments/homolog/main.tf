@@ -32,7 +32,7 @@ module "security_groups" {
   vpc_id = module.vpc.vpc_id
 
   # Security Group para o Aurora RDS
-  rds_sg_name = "rds-sg"
+  rds_sg_name = "aurora-rds-sg"
   rds_sg_rules = [
     {
       ingress = true
@@ -65,7 +65,7 @@ module "security_groups" {
     }
   ]
 
-  # Security Group para o Load Balancer (se você estiver usando um)
+  # Security Group para o Load Balancer ( caso exista um )
   alb_sg_name = "alb-sg"
   alb_sg_rules = [
     {

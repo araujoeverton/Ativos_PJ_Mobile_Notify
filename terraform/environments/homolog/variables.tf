@@ -1,20 +1,20 @@
 variable "aws_region" {
   type = string
   description = "Região da AWS onde os recursos serão criados"
-  default = "sa-east-1" # Exemplo: São Paulo
+  default = "us-east-1"
 }
 
 variable "environment" {
   type = string
-  description = "Ambiente (dev, staging, prod)"
-  default = "dev"
+  description = "Ambiente (homolog, prod)"
+  default = "homolog"
 }
 
 # --- Variáveis da VPC ---
 variable "vpc_name" {
   type = string
   description = "Nome para a VPC"
-  default = "my-app-vpc"
+  default = "vpc-ativos-notify"
 }
 
 variable "vpc_cidr" {
@@ -38,7 +38,7 @@ variable "private_subnet_cidrs" {
 variable "availability_zones" {
   type = list(string)
   description = "Lista de Availability Zones a serem usadas"
-  default = ["sa-east-1a", "sa-east-1b"]
+  default = ["us-east-1a", "us-east-1b"]
 }
 
 # --- Variáveis de Security Groups ---
@@ -64,7 +64,7 @@ variable "alb_allowed_cidrs" {
 variable "aurora_cluster_name" {
   type = string
   description = "Nome do cluster Aurora"
-  default = "my-app-db"
+  default = "cluster-aurora-rds-ativos-notify"
 }
 
 variable "aurora_engine_version" {
@@ -95,7 +95,7 @@ variable "aurora_master_password" {
   type = string
   description = "Senha do usuário administrador do Aurora"
   sensitive = true
-  default = "yoursecurepassword" # Use um gerenciador de segredos em produção!
+  default = "admin" # Use um gerenciador de segredos em produção!
 }
 
 variable "aurora_skip_final_snapshot" {
@@ -138,7 +138,7 @@ variable "aurora_publicly_accessible" {
 variable "ecr_repository_name" {
   type = string
   description = "Nome do repositório ECR"
-  default = "my-app-repo"
+  default = "repo-ativos-notify"
 }
 
 variable "ecr_image_tag_mutability" {
@@ -151,7 +151,7 @@ variable "ecr_image_tag_mutability" {
 variable "ecs_cluster_name" {
   type = string
   description = "Nome do cluster ECS"
-  default = "my-app-cluster"
+  default = "cluster-ecs-ativos-notify"
 }
 
 variable "ecs_container_name" {
