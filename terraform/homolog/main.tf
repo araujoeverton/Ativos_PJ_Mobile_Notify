@@ -28,61 +28,37 @@ module "sg_ativos_notify" {
   descricao  = "Grupo de seguranca"
   ingress_rules = [
     {
-      from_port   = 80
-      to_port     = 80
+      from_port   = 3306
+      to_port     = 3306
       protocol    = "tcp"
       cidr_blocks = ["0.0.0.0/0"]
       description = "Permitir HTTP"
     },
     {
-      from_port   = 443
-      to_port     = 443
-      protocol    = "tcp"
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1"
       cidr_blocks = ["0.0.0.0/0"]
       description = "Permitir HTTPS"
     }
   ]
 }
 
-module "cluster" {
-  source  = "./modules/aurora_rds_postgres"
-  name           = "aurora-ativos-pj-homolog"
-  engine         = "aurora-postgresql"
-  engine_version = "14.5"
-  instance_class = "db.r6g.large"
-  instances = {
-    one = {
-      instance_class      = "db.r5.2xlarge"
-      publicly_accessible = true
-    }
-    2 = {
-      instance_class = "db.r5g.2xlarge"
-    }
-  }
-  
-  autoscaling_enabled      = true
-  autoscaling_min_capacity = 1
-  autoscaling_max_capacity = 5
+module "aurora_homolog_db" {
+  source = "./modules/aurora_rds_postgres" 
 
-  vpc_id               = module.vpc_rede.vpc_id
-  db_subnet_group_name = "db-subnet-group"
-  security_group_rules = {
-    ex1_ingress = {
-      cidr_blocks = ["10.20.0.0/20"]
-    }
-    ex1_ingress = {
-      source_security_group_id = "sg-ativos-pj-homolog"
-    }
-  }
+  subnet_ids            = module.vpc_rede.private_subnet_ids 
+  vpc_security_group_ids = [module.sg_ativos_notify.security_group_id]
+  username              = "postgres" 
+  password              = "postgres" 
+  backup_retention_period = 5
+  bkp_window            = "05:00-08:00"
+}
 
-  storage_encrypted   = true
-  apply_immediately   = true
-  monitoring_interval = 5
+output "aurora_endpoint" {
+  value = module.aurora_homolog_db.aurora_cluster_endpoint
+}
 
-  enabled_cloudwatch_logs_exports = ["postgresql"]
-
-  tags = {
-    Environment = "homolog"
-    Terraform   = "true"
-  }
+output "aurora_reader" {
+  value = module.aurora_homolog_db.aurora_cluster_reader_endpoint
 }
