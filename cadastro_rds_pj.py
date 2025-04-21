@@ -1,13 +1,14 @@
-import psycopg2
+import pip install 
 from faker import Faker
 from datetime import date, timedelta
 import random
+import psycopg2
 
 # Detalhes da conexão com o banco de dados Aurora RDS
-DB_HOST = "seu_endpoint_rds"
-DB_NAME = "seu_nome_banco"
-DB_USER = "seu_usuario"
-DB_PASSWORD = "sua_senha"
+DB_HOST = "ativos-pj-rds-cluster-instance-1.c07gis2620tg.us-east-1.rds.amazonaws.com"
+DB_NAME = "ativospjdb"
+DB_USER = "postgres"
+DB_PASSWORD = "postgres"
 
 # Lista de produtos fornecida
 produtos_data = [

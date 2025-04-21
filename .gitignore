@@ -34,3 +34,5 @@ build/
 
 ### Terraform ###
 **/.terraform
+
+**/.venv

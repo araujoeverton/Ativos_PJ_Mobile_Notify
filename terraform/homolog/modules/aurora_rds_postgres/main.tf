@@ -1,8 +1,6 @@
 resource "aws_db_subnet_group" "db_subnet_group_homolog" {
   subnet_ids = var.subnet_ids
   description = "Grupo de subrede"
-
-  
 }
 
 resource "aws_rds_cluster" "aurora_cluster" {
