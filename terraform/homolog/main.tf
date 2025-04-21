@@ -44,16 +44,45 @@ module "sg_ativos_notify" {
   ]
 }
 
-module "postgresql_cluster" {
-  source = "./modules/aurora_rds_postgres"
+module "cluster" {
+  source  = "./modules/aurora_rds_postgres"
+  name           = "aurora-ativos-pj-homolog"
+  engine         = "aurora-postgresql"
+  engine_version = "14.5"
+  instance_class = "db.r6g.large"
+  instances = {
+    one = {
+      instance_class      = "db.r5.2xlarge"
+      publicly_accessible = true
+    }
+    2 = {
+      instance_class = "db.r5g.2xlarge"
+    }
+  }
+  
+  autoscaling_enabled      = true
+  autoscaling_min_capacity = 1
+  autoscaling_max_capacity = 5
 
-  cluster_name            = "aurora-ativos-cluster"
-  engine_name             = "aurora-postgresql"
-  az                      = ["us-east-1a", "us-east-1b", "us-east-1c"]
-  db_name                 = "dbativospj"
-  db_user                 = "usuarioadmin"
-  db_password             = "usuarioadmin"
-  bkp_retention           = 7
-  preferred_backup_window = "03:00-05:00"
-  private_subnet_ids      = module.vpc_rede.private_subnet_ids
+  vpc_id               = module.vpc_rede.vpc_id
+  db_subnet_group_name = "db-subnet-group"
+  security_group_rules = {
+    ex1_ingress = {
+      cidr_blocks = ["10.20.0.0/20"]
+    }
+    ex1_ingress = {
+      source_security_group_id = "sg-ativos-pj-homolog"
+    }
+  }
+
+  storage_encrypted   = true
+  apply_immediately   = true
+  monitoring_interval = 5
+
+  enabled_cloudwatch_logs_exports = ["postgresql"]
+
+  tags = {
+    Environment = "homolog"
+    Terraform   = "true"
+  }
 }
