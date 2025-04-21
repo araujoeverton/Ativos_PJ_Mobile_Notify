@@ -1,36 +1,20 @@
-module "cluster" {
-  source  = "terraform-aws-modules/rds-aurora/aws"
-
-  name           = "aurora-db-${cluster_name}"
-  engine         = var.engine
-  engine_version = var.version
-  instance_class = var.instance_class_1
-  instances = {
-    one = {}
-    2 = {
-      instance_class = var.instance_class_2
-    }
-  }
-
-  vpc_id               = module.vpc.vpc_id
-  db_subnet_group_name = "db-subnet-group-${var.cluster_name}"
-  security_group_rules = {
-    ex1_ingress = {
-      cidr_blocks = var.subnet_cidr_blocks
-    }
-    ex1_ingress = {
-      source_security_group_id = "sg-${var.cluster_name}"
-    }
-  }
-
-  storage_encrypted   = true
-  apply_immediately   = true
-  monitoring_interval = 5
-
-  enabled_cloudwatch_logs_exports = var.enabled_cloudwatch_logs_exports
+resource "aws_db_subnet_group" "aurora_subnet_group" {
+  name       = "db-subnet-group-aurora-${var.cluster_name}"
+  subnet_ids = var.private_subnet_ids
 
   tags = {
-    Environment = "homolog"
-    Terraform   = "true"
+    Name = "Grupo de subnet para Aurora ${var.cluster_name}"
   }
+}
+
+resource "aws_rds_cluster" "postgresql" {
+  cluster_identifier      = var.cluster_name
+  engine                  = var.engine_name
+  availability_zones      = var.az
+  database_name           = var.db_name
+  master_username         = var.db_user
+  master_password         = var.db_password
+  backup_retention_period = var.bkp_retention
+  preferred_backup_window = var.preferred_backup_window
+  db_subnet_group_name    = aws_db_subnet_group.aurora_subnet_group.name
 }

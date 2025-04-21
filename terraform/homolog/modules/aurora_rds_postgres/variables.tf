@@ -1,36 +1,44 @@
 variable "cluster_name" {
-    description = "Nome do Cluster Aurora RDS"
-    default = "ativos-notify"
+    type = string
+    description = "Nome do cluster"
+}
+  
+variable "engine_name" {
+  type = string
+  description = "Engine do RDS Aurora"
+} 
+
+variable "az" {
+  type = list(string)
+  description = "Lista de zonas de disponibilidade"
 }
 
-variable "engine" {
-    description = "Engine do RDS"
-    default = "aurora-postgresql"
+variable "db_name" {
+    type = string
+    description = "Nome do banco de dados"
 }
 
-variable "version" {
-    description = "Versão da Engine"
-    default = "14.5"
+variable "db_user" {
+    type = string
+    description = "Usuário do banco de dados"
+}
+  
+variable "db_password" {
+    type = string
+    description = "Senha do banco de dados"
 }
 
-variable "instance_class_1" {
-    description = "Classe da instância RDS"
-    default = "db.r6g.large"
+variable "bkp_retention" {
+    type = number
+    description = "Quantidade de dias para manter os backups"
+
 }
 
-variable "instance_class_2" {
-    description = "Classe da instância RDS"
-    default = "db.r6g.2xlarge"
+variable "preferred_backup_window" {
+    type = string
+    description = "Janela de tempo do backup"
 }
-
-variable "subnet_cidr_blocks" {
-    type = list(string)
-    description = "Classe da subnet"
-    default = ["10.20.0.0/20"]
-}
-
-variable "enabled_cloudwatch_logs_exports" {
-    type = list(string)
-    description = "Local de exportação de logs do cloudwath"
-    default = ["postgresql"]
+variable "private_subnet_ids" {
+  type        = list(string)
+  description = "Lista de IDs das subnets privadas para o grupo de subnets do DB"
 }

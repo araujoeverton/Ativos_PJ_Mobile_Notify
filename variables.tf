@@ -74,7 +74,7 @@ variable "engine" {
   default     = "aurora-mysql"
 }
 
-variable "version" {
+variable "engine_version" {
   description = "Versão do engine do Aurora"
   default     = "5.6" # Escolha uma versão válida
 }
