@@ -6,7 +6,7 @@ resource "aws_db_subnet_group" "db_subnet_group_homolog" {
 }
 
 resource "aws_rds_cluster" "aurora_cluster" {
-  engine = "aurora-postgres"
+  engine = "aurora-postgresql"
   engine_mode = "provisioned"
   engine_version = "14.6"
   vpc_security_group_ids = var.vpc_security_group_ids
@@ -26,7 +26,7 @@ resource "aws_rds_cluster" "aurora_cluster" {
 }
 
 resource "aws_rds_cluster_instance" "cluster_instances" {
-  identifier = "aurora-instance-${count.index}"
+  identifier = "aurora-instance"
   cluster_identifier = aws_rds_cluster.aurora_cluster.id
   instance_class = "db.serverless"
   engine = aws_rds_cluster.aurora_cluster.engine
